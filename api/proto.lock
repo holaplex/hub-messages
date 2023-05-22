@@ -1,0 +1,4 @@
+[[schemas]]
+subject = "organization"
+version = 2
+sha512 = "45fd6c1cf4aafa9d7169e9303dd3739b13deb2fde84cc542c33bef032181928212bd2e9d4c7e89b5b390eb85acfa2151e07c0e61a8bd3515e93326892fa9e0eb"

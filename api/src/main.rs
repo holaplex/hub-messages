@@ -1,54 +1,74 @@
+//!
 
-
-use holaplex_rust_boilerplate_api::{
-    db::{Connection, DbArgs},
-    graphql::schema::build_schema,
-    handlers::{graphql_handler, playground},
-    AppState,
+use async_std::stream::StreamExt;
+use holaplex_hub_messages::{events, Args, Services};
+use hub_core::{
+    tokio::{self, task},
+    tracing::{info, warn},
 };
-use hub_core::{clap, prelude::*};
-use poem::{
-    get, listener::TcpListener, middleware::AddData, post, EndpointExt, Route, Server,
+use lettre::{
+    transport::smtp::{
+        authentication::{Credentials, Mechanism},
+        client::{Tls, TlsParameters},
+        PoolConfig,
+    },
+    SmtpTransport,
 };
-
-#[derive(Debug, clap::Args)]
-#[command(version, author, about)]
-pub struct Args {
-    #[arg(short, long, env, default_value_t = 3002)]
-    pub port: u16,
-
-    #[command(flatten)]
-    pub db: DbArgs,
-}
+use tera::Tera;
 
 pub fn main() {
     let opts = hub_core::StartConfig {
-        service_name: "hub-boilerplate-rust",
+        service_name: "hub-messages",
     };
 
     hub_core::run(opts, |common, args| {
-        let Args { port, db } = args;
+        let Args {
+            domain,
+            source_email,
+            smtp,
+        } = args;
+
+        let tera = Tera::new("./templates/*.html")?;
+
+        let creds = Credentials::new(smtp.username.to_owned(), smtp.password.to_owned());
+
+        let tls = TlsParameters::builder(smtp.server.to_owned())
+            .dangerous_accept_invalid_certs(true)
+            .build()?;
+
+        let mailer = SmtpTransport::relay(&smtp.server)?
+            .credentials(creds)
+            .authentication(vec![Mechanism::Login])
+            .pool_config(PoolConfig::new().max_size(smtp.pool_size.into()))
+            .tls(Tls::Required(tls))
+            .port(smtp.plaintext_port)
+            .build();
 
         common.rt.block_on(async move {
-            let connection = Connection::new(db)
-                .await
-                .context("failed to get database connection")?;
+            let cons = common.consumer_cfg.build::<Services>().await?;
 
-            let schema = build_schema();
+            let mut stream = cons.stream();
+            loop {
+                let domain = domain.clone();
+                let source_email = source_email.clone();
+                let mailer = mailer.clone();
+                let tera = tera.clone();
 
-            let state = AppState::new(schema, connection);
+                match stream.next().await {
+                    Some(Ok(msg)) => {
+                        info!(?msg, "message received");
 
-            Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
-                .run(
-                    Route::new()
-                        .at(
-                            "/graphql",
-                            post(graphql_handler).with(AddData::new(state.clone())),
-                        )
-                        .at("/playground", get(playground)),
-                )
-                .await
-                .map_err(Into::into)
+                        tokio::spawn(async move {
+                            events::process(msg, &mailer, &tera, &domain, &source_email)
+                        });
+                        task::yield_now().await;
+                    },
+                    None => (),
+                    Some(Err(e)) => {
+                        warn!("failed to get message {:?}", e);
+                    },
+                }
+            }
         })
     });
 }

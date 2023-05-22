@@ -4,11 +4,9 @@ RUN cargo install cargo-chef --locked
 WORKDIR /app
 
 FROM chef AS planner
-COPY Cargo.* ./
-COPY migration migration
-COPY entity entity
-COPY core core
+COPY Cargo.* .
 COPY api api
+COPY ory ory
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM chef AS builder
@@ -16,33 +14,21 @@ COPY --from=planner /app/recipe.json recipe.json
 # Build dependencies - this is the caching Docker layer!
 RUN cargo chef cook --release --recipe-path recipe.json
 # Build application
-COPY Cargo.* ./
-COPY migration migration
-COPY entity entity
-COPY core core
+COPY Cargo.* .
 COPY api api
-
-FROM builder AS builder-boilerplate-api
-RUN cargo build --release --bin holaplex-rust-boilerplate-api
-
-FROM builder AS builder-migration
-RUN cargo build --release --bin migration
+COPY ory ory
+RUN cargo build --release --bin holaplex-hub-messages
 
 
 FROM debian:bullseye-slim as base
 WORKDIR /app
 RUN apt-get update -y && \
-  apt-get install -y \
-    ca-certificates \
-    libpq5 \
-    libssl1.1 \
+  apt-get install -y --no-install-recommends \
+  ca-certificates \
+  libpq5 \
+  libssl1.1 \
   && \
   rm -rf /var/lib/apt/lists/*
 
-FROM base AS boilerplate-api
-COPY --from=builder-boilerplate-api /app/target/release/holaplex-rust-boilerplate-api bin
-CMD ["bin/holaplex-rust-boilerplate-api"]
-
-FROM base AS migrator
-COPY --from=builder-migration /app/target/release/migration bin/
-CMD ["bin/migration"]
+COPY --from=builder /app/target/release/holaplex-hub-messages /usr/local/bin
+ENTRYPOINT ["/usr/local/bin/holaplex-hub-messages"]
