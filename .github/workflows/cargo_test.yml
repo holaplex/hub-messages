@@ -15,7 +15,7 @@ concurrency:
 jobs:
   test:
     name: Cargo Test
-    runs-on: self-hosted
+    runs-on: amd64
 
     services:
       postgres:
