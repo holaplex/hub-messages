@@ -20,7 +20,7 @@ async-std = { version = "^1", features = ["attributes", "tokio1"] }
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = { version = "1.0.91" }
 tera = "1.18.1"
-lettre ={version =  "0.10.4", features = ["smtp-transport", "native-tls"] }
+lettre ={ version =  "0.10.4", features = ["smtp-transport", "native-tls"] }
 
 [dependencies.hub-core]
 package = "holaplex-hub-core"
