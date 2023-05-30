@@ -20,7 +20,7 @@ pub fn process(
     // match topics
     match msg {
         Services::Organizations(key, e) => match e.event {
-            Some(OrganizationEvent::InviteSent(invite)) => {
+            Some(OrganizationEvent::SendInvite(invite)) => {
                 send_invite_email(mailer, tera, domain, source_email, key, invite)
             },
             Some(_) | None => Ok(()),
