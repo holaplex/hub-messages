@@ -3,6 +3,18 @@ RUN cargo install cargo-chef --locked
 
 WORKDIR /app
 
+RUN apt-get update -y && \
+  apt-get install -y --no-install-recommends \
+    cmake \
+    g++ \
+    libsasl2-dev \
+    libssl-dev \
+    libudev-dev \
+    pkg-config \
+    protobuf-compiler \
+  && \
+  rm -rf /var/lib/apt/lists/*
+
 FROM chef AS planner
 COPY Cargo.* .
 COPY api api
