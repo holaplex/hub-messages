@@ -1,12 +1,12 @@
-# hub-rust-boilerplate
-Template rust service repository for the Holaplex Hub
+# Hub messages
+A Redpanda consumer that listens for events emitted by different HUB services and sends related emails to users.
 
-# Workspaces
+## Getting Started
+
+Requirements:
+- Docker
+- Rust
 
 ```
-/api # API server
-/core # shared dependencies such as queries and mutations
-/entity # application database models and graphql objects
-/migration # database migrations
-/src # app entry point
+cargo run --bin holaplex-hub-messages
 ```

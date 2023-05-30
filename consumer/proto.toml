@@ -1,0 +1,5 @@
+[registry]
+endpoint = "https://schemas.holaplex.tools"
+
+[schemas]
+organization = 4

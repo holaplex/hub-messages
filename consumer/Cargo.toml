@@ -1,0 +1,36 @@
+[package]
+name = "holaplex-hub-messages"
+version = "0.1.0"
+authors = ["Holaplex <engineering@holaplex.com>"]
+edition = "2021"
+description = "Holaplex Hub messages service"
+readme = "./README.md"
+repository = "https://github.com/holaplex/hub-messages"
+license = "AGPL-3.0-or-later"
+keywords = ["hub", "holaplex", "web3"]
+categories = ["cryptography::cryptocurrencies", "web-programming"]
+
+build = "build.rs"
+
+[lib]
+
+[dependencies]
+prost = "0.11.6"
+async-std = { version = "^1", features = ["attributes", "tokio1"] }
+serde = { version = "1.0.152", features = ["derive"] }
+serde_json = { version = "1.0.91" }
+tera = "1.18.1"
+lettre ={ version =  "0.10.4", features = ["smtp-transport", "native-tls"] }
+
+[dependencies.hub-core]
+package = "holaplex-hub-core"
+version = "0.2.0"
+git = "https://github.com/holaplex/hub-core"
+branch = "stable"
+features = ["kafka"]
+
+[build-dependencies.hub-core-build]
+package = "holaplex-hub-core-build"
+version = "0.2.0"
+git = "https://github.com/holaplex/hub-core"
+branch = "stable"
