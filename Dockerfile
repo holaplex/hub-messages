@@ -40,5 +40,6 @@ RUN apt-get update -y && \
   && \
   rm -rf /var/lib/apt/lists/*
 
+COPY templates /app/templates
 COPY --from=builder /app/target/release/holaplex-hub-messages /usr/local/bin
 ENTRYPOINT ["/usr/local/bin/holaplex-hub-messages"]
