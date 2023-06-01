@@ -20,7 +20,7 @@ pub fn process(
     // match topics
     match msg {
         Services::Organizations(key, e) => match e.event {
-            Some(OrganizationEvent::SendInvite(invite)) => {
+            Some(OrganizationEvent::InviteCreated(invite)) => {
                 send_invite_email(mailer, tera, domain, source_email, key, invite)
             },
             Some(_) | None => Ok(()),
@@ -53,7 +53,7 @@ fn send_invite_email(
     let html: String = tera.render("send_invite.html", &context)?;
 
     let email = Message::builder()
-        .from(source_email.parse()?)
+        .from(format!("Holaplex Support <{source_email}>").parse()?)
         .to(email.parse().unwrap())
         .subject(format!("You have been invited to join {organization}"))
         .header(ContentType::TEXT_HTML)
