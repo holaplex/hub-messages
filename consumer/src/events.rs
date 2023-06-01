@@ -53,7 +53,7 @@ fn send_invite_email(
     let html: String = tera.render("send_invite.html", &context)?;
 
     let email = Message::builder()
-        .from(format!("Holaplex Support<{source_email}>").parse()?)
+        .from(format!("Holaplex Support <{source_email}>").parse()?)
         .to(email.parse().unwrap())
         .subject(format!("You have been invited to join {organization}"))
         .header(ContentType::TEXT_HTML)
